@@ -1,0 +1,74 @@
+substitutions:
+  device_id: esp32cam2
+  device_friendly_name: "ESP32 Cam 2"
+  cam_name: "Camara 2"
+  flash_name: "Flash Cam 2"
+  restart_name: "Reiniciar Cam 2"
+
+esphome:
+  name: ${device_id}
+  friendly_name: ${device_friendly_name}
+
+esp32:
+  board: esp32cam
+  framework:
+    type: arduino
+
+psram:
+  mode: quad
+  speed: 80MHz
+
+logger:
+  level: WARN
+
+api:
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+
+i2c:
+  id: cam_i2c
+  sda: GPIO26
+  scl: GPIO27
+  scan: false
+
+output:
+  - platform: gpio
+    pin: GPIO4
+    id: flash_gpio
+
+light:
+  - platform: binary
+    output: flash_gpio
+    name: ${flash_name}
+
+esp32_camera:
+  name: ${cam_name}
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_id: cam_i2c
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+  resolution: 640x480
+  jpeg_quality: 12
+  max_framerate: 5 fps
+  idle_framerate: 0.2 fps
+
+button:
+  - platform: restart
+    name: ${restart_name}
+
+esp32_camera_web_server:
+  - port: 8080
+    mode: STREAM
+  - port: 8081
+    mode: SNAPSHOT

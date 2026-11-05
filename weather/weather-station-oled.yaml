@@ -1,0 +1,90 @@
+esphome:
+  name: weather-oled
+  friendly_name: Weather OLED
+
+esp8266:
+  board: nodemcuv2
+
+logger:
+
+api:
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "Weather-OLED Fallback"
+    password: !secret ap_password
+
+captive_portal:
+
+i2c:
+  sda: D6
+  scl: D5
+  scan: true
+
+font:
+  - file: "gfonts://Roboto"
+    id: font_small
+    size: 11
+  - file: "gfonts://Roboto"
+    id: font_medium
+    size: 14
+  - file: "gfonts://Roboto"
+    id: font_big
+    size: 20
+
+sensor:
+  - platform: dht
+    pin:
+      number: D1
+      # pullup: false
+    model: DHT11
+    update_interval: 10s
+    temperature:
+      name: "Temperatura salon"
+      id: temp_c
+      device_class: temperature
+      state_class: measurement
+    humidity:
+      name: "Humedad salon"
+      id: hum_pct
+      device_class: humidity
+      state_class: measurement
+      accuracy_decimals: 0
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    update_interval: 1s
+    rotation: 0°
+    contrast: 100%
+    lambda: |-
+      it.fill(COLOR_OFF);
+
+      it.line(0, 12, 127, 12);
+      it.printf(4, 10, id(font_small), "HOME WEATHER");
+      it.printf(108, 10, id(font_small), "%s", WiFi.isConnected() ? "WiFi" : "--");
+
+      it.printf(8, 22, id(font_small), "TEMP");
+      if (!isnan(id(temp_c).state)) {
+        it.printf(8, 44, id(font_big), "%.1fC", id(temp_c).state);
+      } else {
+        it.printf(8, 44, id(font_big), "--.-C");
+      }
+
+      it.line(64, 16, 64, 63);
+
+      it.printf(74, 22, id(font_small), "HUM");
+      if (!isnan(id(hum_pct).state)) {
+        it.printf(74, 44, id(font_big), "%.0f%%", id(hum_pct).state);
+      } else {
+        it.printf(74, 44, id(font_big), "--%%");
+      }
+
+      it.line(0, 52, 127, 52);
+      it.printf(4, 63, id(font_small), "DHT11 + OLED");
